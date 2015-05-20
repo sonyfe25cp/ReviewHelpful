@@ -1,0 +1,9 @@
+.idea/
+.settings/
+.project
+target/
+bin/
+*.iml
+.DS_Store
+*.jar
+kakarotto.config
