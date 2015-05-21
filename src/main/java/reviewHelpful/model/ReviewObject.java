@@ -1,4 +1,4 @@
-package model;
+package reviewHelpful.model;
 
 import java.util.List;
 

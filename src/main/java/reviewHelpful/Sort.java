@@ -1,4 +1,6 @@
-import model.Review;
+package reviewHelpful;
+
+import reviewHelpful.model.Review;
 
 import java.util.Collections;
 import java.util.Comparator;

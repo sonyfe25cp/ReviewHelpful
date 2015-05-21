@@ -1,10 +1,12 @@
+package reviewHelpful;
+
 import com.omartech.utils.DBUtils;
-import model.Review;
-import model.ReviewObject;
-import model.StatReviewCount;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reviewHelpful.model.ReviewObject;
+import reviewHelpful.model.Review;
+import reviewHelpful.model.StatReviewCount;
 
 import java.sql.*;
 import java.util.ArrayList;

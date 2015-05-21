@@ -1,14 +1,18 @@
+package reviewHelpful;
+
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-import model.ReviewObject;
-import model.StatReviewCount;
 import org.apache.commons.io.FileUtils;
+import reviewHelpful.model.ReviewObject;
+import reviewHelpful.model.StatReviewCount;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by OmarTech on 15-5-6.

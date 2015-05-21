@@ -1,6 +1,8 @@
-import model.Review;
-import model.ReviewObject;
-import model.StatReviewCount;
+package reviewHelpful;
+
+import reviewHelpful.model.Review;
+import reviewHelpful.model.ReviewObject;
+import reviewHelpful.model.StatReviewCount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

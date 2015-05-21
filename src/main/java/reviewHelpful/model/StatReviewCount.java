@@ -1,4 +1,4 @@
-package model;
+package reviewHelpful.model;
 /**
  * Created by OmarTech on 15-5-6.
  */
