@@ -1,0 +1,25 @@
+package com.omartech.review.server.service;
+
+import com.omartech.data.gen.*;
+import org.apache.thrift.TException;
+
+/**
+ * Created by omar on 14-12-6.
+ */
+public class ADataService extends AIndexSearcher implements DataService.Iface {
+
+    @Override
+    public TFIDFResponse tfidf(SentenceRequest req) throws TException {
+        throw new TException();
+    }
+
+    @Override
+    public SentenceResponse sendSentence(SentenceRequest req) throws TException {
+        throw new TException();
+    }
+
+    @Override
+    public ReviewFeatureResponse findFeatures(SentenceRequest req) throws TException {
+        throw new TException();
+    }
+}
