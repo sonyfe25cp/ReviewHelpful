@@ -1,6 +1,6 @@
 package com.omartech.review.server.service;
 
-import com.omartech.data.gen.*;
+import com.omartech.review.gen.*;
 import org.apache.thrift.TException;
 
 /**
@@ -20,6 +20,11 @@ public class ADataService extends AIndexSearcher implements DataService.Iface {
 
     @Override
     public ReviewFeatureResponse findFeatures(SentenceRequest req) throws TException {
+        throw new TException();
+    }
+
+    @Override
+    public ReviewFeatureResponse fetchWholeFeatures() throws TException {
         throw new TException();
     }
 }

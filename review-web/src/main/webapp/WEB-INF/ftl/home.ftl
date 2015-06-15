@@ -14,6 +14,10 @@
     </style>
 </head>
 <body class="container">
+
+<a href="/prepare?sep=0">数据准备--好评差评建议合并</a>
+<a href="/prepare?sep=1">数据准备--好评差评建议分开</a>
+
 <table>
     <thead>
     <th>ID</th>

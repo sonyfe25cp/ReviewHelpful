@@ -1,6 +1,6 @@
-package com.omartech.engine.client;
+package com.omartech.review.client;
 
-import com.omartech.data.gen.*;
+import com.omartech.review.gen.*;
 import com.google.gson.Gson;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;

@@ -82,7 +82,7 @@
             });
         });
     </script>
-    <a href="/showDetails?id=${id}&goodOrBad=${goodOrBad}&method=${key}&minRou=5">${key}距离</a>
+    <a href="/showDetails?id=${id}&goodOrBad=${goodOrBad}&method=${key}&minRou=3">${key}距离</a>
     <div id="${key}" style="min-width:700px;height:400px"></div>
 
     </#list>

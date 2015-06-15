@@ -1,13 +1,14 @@
 package com.omartech.review.server.app;
 
-import com.omartech.data.gen.SentenceRequest;
-import com.omartech.data.gen.SentenceResponse;
-import com.omartech.data.gen.TFIDFResponse;
+import com.omartech.review.gen.SentenceRequest;
+import com.omartech.review.gen.SentenceResponse;
+import com.omartech.review.gen.TFIDFResponse;
 import com.omartech.review.server.service.ADataService;
 import com.omartech.utils.vocabulary.Vocabulary;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.thrift.TException;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,10 +19,11 @@ public class TFIDFServer extends ADataService {
 
     Vocabulary vocabulary = new Vocabulary();
 
-    public TFIDFServer() {
+    @Override
+    protected void after() {
+        vocabulary.setFilterSingleWord(true);
         vocabulary.setAutoFilter(false);
     }
-
 
     @Override
     public SentenceResponse sendSentence(SentenceRequest req) throws TException {
@@ -47,22 +49,16 @@ public class TFIDFServer extends ADataService {
     @Override
     public TFIDFResponse tfidf(SentenceRequest req) throws TException {
         String sentence = req.getSentence();
-        Map<Integer, Double> integerDoubleMap = null;
-        Map<String, Double> stringDoubleMap = null;
-        if (StringUtils.isEmpty(sentence)) {
-            integerDoubleMap = vocabulary.generateVectorMap(sentence);
-            List<String> cut = vocabulary.cut(sentence);
-            for (String s : cut) {
-                Double wordWeight = vocabulary.getWordWeight(s);
-                stringDoubleMap.put(s, wordWeight);
-            }
-        }
+        Map<Integer, Double> integerDoubleMap = vocabulary.generatePositionVectionMap(sentence);
+        Map<String, Double> stringDoubleMap = vocabulary.generateStringVectorMap(sentence);
+
 
         TFIDFResponse response = new TFIDFResponse();
         response.setReq(req);
         response.setLexiconSize(vocabulary.size());
         response.setPositionMap(integerDoubleMap);
         response.setStringMap(stringDoubleMap);
+
         return response;
     }
 

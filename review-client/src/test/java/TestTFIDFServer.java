@@ -1,7 +1,8 @@
-import com.omartech.data.gen.SentenceRequest;
-import com.omartech.data.gen.TFIDFResponse;
-import com.omartech.engine.client.ClientException;
-import com.omartech.engine.client.DataClients;
+
+import com.omartech.review.client.ClientException;
+import com.omartech.review.client.DataClients;
+import com.omartech.review.gen.SentenceRequest;
+import com.omartech.review.gen.TFIDFResponse;
 
 import java.util.Map;
 
@@ -12,6 +13,11 @@ public class TestTFIDFServer {
 
     public static void main(String[] args) throws ClientException {
         DataClients clients = new DataClients("127.0.0.1:8123,127.0.0.1:8123");
+
+        SentenceRequest clearReq = new SentenceRequest();
+        clearReq.setClear(true);
+        clients.sendSentence(clearReq);
+
         SentenceRequest sr1 = new SentenceRequest();
         sr1.setSentence("我爱北京天安门");
         SentenceRequest sr2 = new SentenceRequest();
@@ -29,6 +35,10 @@ public class TestTFIDFServer {
         Map<String, Double> stringMap = tfidfResponse.getStringMap();
         for (Map.Entry<String, Double> entry : stringMap.entrySet()) {
             System.out.println(entry.getKey() + " -- " + entry.getValue());
+        }
+        Map<Integer, Double> positionMap = tfidfResponse.getPositionMap();
+        for (Map.Entry<Integer, Double> entry : positionMap.entrySet()) {
+            System.out.println(entry.getKey() + "  -- " + entry.getValue());
         }
 
     }

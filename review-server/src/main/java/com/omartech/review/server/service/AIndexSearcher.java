@@ -1,6 +1,6 @@
 package com.omartech.review.server.service;
 
-import com.omartech.data.gen.DataService;
+import com.omartech.review.gen.DataService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;

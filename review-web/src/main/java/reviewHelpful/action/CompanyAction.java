@@ -1,13 +1,17 @@
 package reviewHelpful.action;
 
+import com.omartech.review.client.ClientException;
+import com.omartech.review.client.DataClients;
+import com.omartech.review.gen.SentenceRequest;
+import com.omartech.review.gen.TFIDFResponse;
 import org.apache.commons.lang3.StringUtils;
-import org.jcp.xml.dsig.internal.dom.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+import reviewHelpful.ClientsFetcher;
 import reviewHelpful.DBService;
 import reviewHelpful.NKCluster;
 import reviewHelpful.model.Review;
@@ -24,6 +28,71 @@ import java.util.*;
 @Controller
 public class CompanyAction {
     static Logger logger = LoggerFactory.getLogger(CompanyAction.class);
+
+    static DataClients tfidfClient = ClientsFetcher.tfidfClient;
+    static DataClients commentObjectClient = ClientsFetcher.commentObjectClient;
+
+    @RequestMapping("/pp")
+    public String test() throws ClientException {
+        DataClients clients = new DataClients("127.0.0.1:8123,127.0.0.1:8123");
+
+        SentenceRequest clearReq = new SentenceRequest();
+        clearReq.setClear(true);
+        clients.sendSentence(clearReq);
+
+        SentenceRequest sr1 = new SentenceRequest();
+        sr1.setSentence("我爱北京天安门");
+        SentenceRequest sr2 = new SentenceRequest();
+        sr2.setSentence("天安门上太阳升");
+        sr2.setOver(true);
+
+        clients.sendSentence(sr1);
+        clients.sendSentence(sr2);
+
+        String sentence = "北京天安门真好看";
+
+        SentenceRequest sr3 = new SentenceRequest();
+        sr3.setSentence(sentence);
+        TFIDFResponse tfidfResponse = clients.tfidf(sr3);
+        Map<String, Double> stringMap = tfidfResponse.getStringMap();
+        for (Map.Entry<String, Double> entry : stringMap.entrySet()) {
+            System.out.println(entry.getKey() + " -- " + entry.getValue());
+        }
+        Map<Integer, Double> positionMap = tfidfResponse.getPositionMap();
+        for (Map.Entry<Integer, Double> entry : positionMap.entrySet()) {
+            System.out.println(entry.getKey() + "  -- " + entry.getValue());
+        }
+        return "11";
+
+    }
+
+
+    @RequestMapping("/prepare")
+    public ModelAndView prepare(@RequestParam(defaultValue = "0", required = false) int sep) {
+        Connection connection = DBService.fetchConnection();
+        try {
+            List<String> strings = DBService.fetchAllReviews(connection, sep);
+            SentenceRequest clearReq = new SentenceRequest();
+            clearReq.setClear(true);
+            tfidfClient.sendSentence(clearReq);
+
+            for (String str : strings) {
+                SentenceRequest req = new SentenceRequest();
+                req.setSentence(str);
+                tfidfClient.sendSentence(req);
+            }
+            SentenceRequest overReq = new SentenceRequest();
+            overReq.setOver(true);
+            tfidfClient.sendSentence(overReq);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (ClientException e) {
+            e.printStackTrace();
+        }
+
+        return new ModelAndView("prepareOver");
+    }
 
     @RequestMapping("/")
     public ModelAndView list() {
@@ -110,7 +179,7 @@ public class CompanyAction {
             public int compare(Map.Entry<Integer, Double> o1, Map.Entry<Integer, Double> o2) {
                 Double value = o1.getValue();
                 Double value1 = o2.getValue();
-                if(value == null || value1 == null){
+                if (value == null || value1 == null) {
                     logger.error("为什么有空的？{}, {}", o1.getKey(), o2.getKey());
                 }
                 if (value > value1) {
@@ -183,7 +252,10 @@ public class CompanyAction {
     }
 
     @RequestMapping("/show")
-    public ModelAndView show(@RequestParam int id, @RequestParam int goodOrBad) {
+    public ModelAndView show(
+            @RequestParam int id,
+            @RequestParam int goodOrBad,
+            @RequestParam(defaultValue = "1", required = false) int global) {
 
 
         ReviewObject reviewObject = null;
@@ -196,6 +268,46 @@ public class CompanyAction {
         String companyName = reviewObject.getCompanyName();
 
         List<Review> originReviews = reviewObject.getOriginReviews();
+
+
+        try {
+            if (global == 1) {//采用全局数据
+                List<String> wholeReviews = new ArrayList<>();
+                try (Connection connection = DBService.fetchConnection();) {
+                    wholeReviews = DBService.fetchAllReviews(connection, 0);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+
+                SentenceRequest clearReq = new SentenceRequest();
+                clearReq.setClear(true);
+                commentObjectClient.sendSentence(clearReq);
+                for (String text : wholeReviews) {
+                    SentenceRequest request = new SentenceRequest();
+                    request.setSentence(text);
+                    commentObjectClient.sendSentence(request);
+                }
+                SentenceRequest overReq = new SentenceRequest();
+                overReq.setOver(true);
+                commentObjectClient.sendSentence(overReq);
+            } else {
+                SentenceRequest clearReq = new SentenceRequest();
+                clearReq.setClear(true);
+                commentObjectClient.sendSentence(clearReq);
+                for (Review review : originReviews) {
+                    SentenceRequest request = new SentenceRequest();
+                    String text = review.getText();
+                    request.setSentence(text);
+                    commentObjectClient.sendSentence(request);
+                }
+                SentenceRequest overReq = new SentenceRequest();
+                overReq.setOver(true);
+                commentObjectClient.sendSentence(overReq);
+            }
+        } catch (ClientException e) {
+            e.printStackTrace();
+        }
+
 
         NKCluster.DistanceEnum[] enums = NKCluster.DistanceEnum.values();
         Map<String, String> differentResults = new HashMap<>();

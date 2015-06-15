@@ -9,7 +9,7 @@ FILE="${DIR}/data.thrift"
 (cd review-client && thrift -gen java ${FILE})
 (cd review-server&& thrift -gen java ${FILE})
 
-(cd python-scripts && python gen_hooks.py --file ../data.thrift --mode gen-java > ../review-client/src/main/java/com/omartech/engine/client/DataClients.java)
+(cd python-scripts && python gen_hooks.py --file ../data.thrift --mode gen-java > ../review-client/src/main/java/com/omartech/review/client/DataClients.java)
 
 
 

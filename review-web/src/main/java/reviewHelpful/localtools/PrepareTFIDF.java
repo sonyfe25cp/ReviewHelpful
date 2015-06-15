@@ -18,7 +18,7 @@ public class PrepareTFIDF {
             List<String> reviews = DBService.fetchAllReviews(connection, 1);
 
             Vocabulary vocabulary = new Vocabulary();
-            vocabulary.setSingleWord(true);
+            vocabulary.setFilterSingleWord(true);
 
             for (String review : reviews) {
                 vocabulary.addText(review);
@@ -30,7 +30,7 @@ public class PrepareTFIDF {
             List<String> reviewsSep = DBService.fetchAllReviews(connection, 0);
 
             Vocabulary vocabulary2 = new Vocabulary();
-            vocabulary2.setSingleWord(true);
+            vocabulary2.setFilterSingleWord(true);
 
             for (String review : reviewsSep) {
                 vocabulary2.addText(review);
@@ -45,7 +45,7 @@ public class PrepareTFIDF {
 
     public void test(){
         Vocabulary vtest = Vocabulary.loadFromDB("reviews_not_sep");
-        Map<Integer, Double> sampleMap = vtest.generateVectorMap("这家公司的环境不错");
+        Map<Integer, Double> sampleMap = vtest.generatePositionVectionMap("这家公司的环境不错");
         for (Map.Entry<Integer, Double> entry : sampleMap.entrySet()) {
             System.out.println(entry.getKey() + " - " + entry.getValue());
         }

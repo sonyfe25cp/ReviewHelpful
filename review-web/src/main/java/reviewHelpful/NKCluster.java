@@ -1,8 +1,11 @@
 package reviewHelpful;
 
+import com.omartech.review.client.ClientException;
+import com.omartech.review.client.DataClients;
+import com.omartech.review.gen.ReviewFeatureResponse;
+import com.omartech.review.gen.SentenceRequest;
+import com.omartech.review.gen.TFIDFResponse;
 import com.omartech.utils.vocabulary.Distance;
-import org.ansj.domain.Term;
-import org.ansj.splitWord.analysis.NlpAnalysis;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +26,12 @@ public class NKCluster {
     private Map<Integer, Integer> rouMap = new HashMap<>();
 
     private DistanceEnum distanceType;
+
+
+    static DataClients tfidfClient = ClientsFetcher.tfidfClient;
+
+    static DataClients commentObjectClient = ClientsFetcher.commentObjectClient;
+
 
     public void setDistanceType(DistanceEnum distanceType) {
         this.distanceType = distanceType;
@@ -145,7 +154,8 @@ public class NKCluster {
 
                     }
                     totalNei += tempNei;
-                    logger.info("round:{}, dc:{}, i:{}, nei:{}", new String[]{round + "", dc + "", i + "", tempNei + ""});
+                    logger.info("distance:{}, round:{}, dc:{}, i:{}, nei:{}", new String[]{distanceType.toString(), round + "", dc + "", i + "", tempNei + ""});
+
                 }
                 avaNeibor = Math.round(totalNei / (originReviews.size() + 0.0f));
                 logger.info("round:{}, dc:{}, totalNei:{}, avaNeibo:{}", new String[]{round + "", dc + "", totalNei + "", avaNeibor + ""});
@@ -243,7 +253,10 @@ public class NKCluster {
     public static double distance(Review review1, Review review2, DistanceEnum distanceType) {
         String text1 = review1.getText();
         String text2 = review2.getText();
-
+        SentenceRequest sr1 = new SentenceRequest();
+        sr1.setSentence(text1);
+        SentenceRequest sr2 = new SentenceRequest();
+        sr2.setSentence(text2);
         double distance = 0;
         switch (distanceType) {
             case Jaccard:
@@ -252,17 +265,25 @@ public class NKCluster {
 //                logger.info("[{}] vs [{}] = {}", new String[]{StringUtils.deleteWhitespace(text1), StringUtils.deleteWhitespace(text2), distance + ""});
                 break;
             case Cosine:
-//                Vocabulary vtest = Vocabulary.loadFromDB("reviews_not_sep");
-//                Map<Integer, Double> sampleMap = vtest.generateVectorMap("这家公司的环境不错");
-//                for (Map.Entry<Integer, Double> entry : sampleMap.entrySet()) {
-//                    System.out.println(entry.getKey() + " - " + entry.getValue());
-//                }
-//
-//                Vocabulary vocabulary = Vocabulary.loadFromDB("reviews_sep");
-////                Vocabulary vocabulary = Vocabulary.loadFromDB("reviews_not_sep");
-//                double[] double1 = vocabulary.generateVector(text1);
-//                double[] double2 = vocabulary.generateVector(text2);
-//                distance = Distance.cosine(double1, double2);
+                try {
+                    TFIDFResponse tr1 = tfidfClient.tfidf(sr1);
+                    Map<Integer, Double> positionMap1 = tr1.getPositionMap();
+
+                    TFIDFResponse tr2 = tfidfClient.tfidf(sr2);
+                    Map<Integer, Double> positionMap2 = tr2.getPositionMap();
+                    int lexiconSize = tr1.getLexiconSize();
+
+                    double[] v1 = transfer2Array(positionMap1, lexiconSize);
+                    double[] v2 = transfer2Array(positionMap2, lexiconSize);
+
+                    double cosine = Distance.cosine(v1, v2);
+
+                    distance = 1 - cosine;
+
+                } catch (ClientException e) {
+                    e.printStackTrace();
+                }
+
                 break;
             case Customed:
                 int rating = review1.getRating();
@@ -275,17 +296,40 @@ public class NKCluster {
                 break;
 
             case NounAndAdj:
-                List<Term> terms1 = NlpAnalysis.parse(text1);
+                try {
+                    ReviewFeatureResponse features1 = commentObjectClient.findFeatures(sr1);
+                    List<String> words = features1.getWords();
+                    ReviewFeatureResponse features2 = commentObjectClient.findFeatures(sr2);
+                    List<String> words1 = features2.getWords();
 
+                    Set<String> union = new HashSet<>();
+                    union.addAll(words);
+                    union.addAll(words1);
 
-                List<Term> terms2 = NlpAnalysis.parse(text2);
+                    distance = 1 - ((words.size() + words1.size() - union.size()) / (union.size() + 0.0));
 
+                    if (distance != 1) {
+                        logger.info("{} <-> {} is {}", new String[]{text1, text2, distance + ""});
+                    }
+                } catch (ClientException e) {
+                    e.printStackTrace();
+                }
                 break;
             case Length:
                 distance = Math.abs(text1.length() - text2.length());
                 break;
         }
         return distance;
+    }
+
+    private static double[] transfer2Array(Map<Integer, Double> positionMap, int lexiconSize) {
+        double[] vector = new double[lexiconSize];
+        for (Map.Entry<Integer, Double> entry : positionMap.entrySet()) {
+            Integer key = entry.getKey();
+            Double value = entry.getValue();
+            vector[key] = value;
+        }
+        return vector;
     }
 
 
