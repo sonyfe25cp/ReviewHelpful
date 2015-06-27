@@ -20,11 +20,28 @@ struct TFIDFResponse{
   4: i32 lexiconSize,//总词数
 }
 
+struct TFIDFStatusResponse{
+  1: i32 totalWords,
+  2: map<i32, string> wordsPositionMap,//词序map
+}
+
+struct ServerStatusRequest{
+  1: string ip,
+}
+
 
 struct ReviewFeatureResponse{
   1: SentenceRequest req,
   2: list<string> words,
   3: list<string> adjs,
+}
+
+struct ExtralTFRequest{
+  1: string word
+}
+
+struct ExtralTFResponse{
+  1: i32 count
 }
 
 
@@ -35,9 +52,13 @@ service DataService{
 
   TFIDFResponse tfidf(1: SentenceRequest req)//获取句子的tfidf
 
+  TFIDFStatusResponse tfidfStatus(1: ServerStatusRequest req)//查询server的状态
+
   ReviewFeatureResponse findFeatures(1: SentenceRequest req)//发送句子到server
 
   ReviewFeatureResponse fetchWholeFeatures()//返回当前server中所有features
+
+  ExtralTFResponse findExtralTF(1: ExtralTFRequest req)//返回外部词典中的tf
 
 }
 

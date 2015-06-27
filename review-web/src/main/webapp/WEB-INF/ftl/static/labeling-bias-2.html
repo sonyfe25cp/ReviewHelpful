@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <script type="text/javascript" src="http://cdn.hcharts.cn/jquery/jquery-1.8.3.min.js"></script>
+    <script type="text/javascript" src="http://cdn.hcharts.cn/highcharts/highcharts.js"></script>
+    <script type="text/javascript" src="http://cdn.hcharts.cn/highcharts/exporting.js"></script>
+    <script>
+        $(function () {
+            $('#container').highcharts({
+                title: {
+                    text: '数据标注情况',
+                    x: -20 //center
+                },
+                subtitle: {
+                    text: 'Source: Kanzhun.com',
+                    x: -20
+                },
+                xAxis: {
+                    categories: ['100', '400', '600', '800', '1200']
+                },
+                yAxis: {
+                    title: {
+                        text: '个数'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#808080'
+                    }]
+                },
+                tooltip: {
+                    valueSuffix: '°C'
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle',
+                    borderWidth: 0
+                },
+                series: [{
+                    name: '0',
+                    data: [17254, 28571, 12377, 3224, 820]
+                }, {
+                    name: '2',
+                    data: [51, 121, 95, 17, 4]
+                }, {
+                    name: '3',
+                    data: [172, 186, 238, 227, 40]
+                }, {
+                    name: '4',
+                    data: [3640, 3974, 1556, 234, 43]
+                }, {
+                    name: '6',
+                    data: [21, 44, 40, 7, 4]
+                }, {
+                    name: '8',
+                    data: [349, 1175, 481, 65, 14]
+                }, {
+                    name: '9',
+                    data: [1690, 2761, 5166, 1143, 25]
+                }, {
+                    name: '12',
+                    data: [3057, 4380, 1144, 68, 14]
+                }, {
+                    name: '13',
+                    data: [863, 1148, 419, 89, 6]
+                }, {
+                    name: '15',
+                    data: [42, 81, 34, 5, 2]
+                }, {
+                    name: '18',
+                    data: [0, 1, 0, 0, 0]
+                }, {
+                    name: '20',
+                    data: [0, 0, 1, 3, 0]
+                }, {
+                    name: '21',
+                    data: [2, 7, 1, 0, 0]
+                }, {
+                    name: '100000000',
+                    data: [28, 43, 7, 4, 0]
+                }, {
+                    name: '23',
+                    data: [27, 65, 51, 7, 2]
+                }, {
+                    name: '29',
+                    data: [18, 46, 8, 0, 0]
+                }]
+            });
+        });
+
+    </script>
+</head>
+<body>
+<div id="container" style="min-width:700px;height:400px"></div>
+</body>
+</html>

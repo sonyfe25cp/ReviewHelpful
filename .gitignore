@@ -7,3 +7,8 @@ bin/
 .DS_Store
 *.jar
 kakarotto.config
+data2.arff
+data.arff
+extralData
+perComPerLine
+featuresSelection

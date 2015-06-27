@@ -1,13 +1,13 @@
 package com.omartech.review.server.app;
 
-import com.omartech.review.gen.SentenceRequest;
-import com.omartech.review.gen.SentenceResponse;
-import com.omartech.review.gen.TFIDFResponse;
+import com.omartech.review.gen.*;
 import com.omartech.review.server.service.ADataService;
 import com.omartech.utils.vocabulary.Vocabulary;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.thrift.TException;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,12 +17,14 @@ import java.util.Map;
  */
 public class TFIDFServer extends ADataService {
 
-    Vocabulary vocabulary = new Vocabulary();
+    private Vocabulary vocabulary = new Vocabulary();
+
+    private static int num = 0;
 
     @Override
     protected void after() {
         vocabulary.setFilterSingleWord(true);
-        vocabulary.setAutoFilter(false);
+        vocabulary.setAutoFilter(true);
     }
 
     @Override
@@ -40,6 +42,7 @@ public class TFIDFServer extends ADataService {
         }
         if (over) {
             vocabulary.addOver();
+            vocabulary.saveToDisk(DateFormatUtils.format(new Date(), "yyyy-MM-dd") + "-" + num);
         }
         SentenceResponse response = new SentenceResponse();
         response.setReq(req);
@@ -59,6 +62,19 @@ public class TFIDFServer extends ADataService {
         response.setPositionMap(integerDoubleMap);
         response.setStringMap(stringDoubleMap);
 
+        return response;
+    }
+
+    @Override
+    public TFIDFStatusResponse tfidfStatus(ServerStatusRequest req) throws TException {
+        Map<String, Integer> posMap = vocabulary.getPosMap();
+        Map<Integer, String> map = new HashMap<>(posMap.size());
+        for (Map.Entry<String, Integer> entry : posMap.entrySet()) {
+            map.put(entry.getValue(), entry.getKey());
+        }
+        TFIDFStatusResponse response = new TFIDFStatusResponse();
+        response.setWordsPositionMap(map);
+        response.setTotalWords(map.size());
         return response;
     }
 

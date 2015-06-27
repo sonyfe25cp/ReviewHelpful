@@ -44,7 +44,7 @@ public class DBService {
 
     public static ReviewObject findReviewsByCompanyId(Connection conn, int companyId, int emotion) throws SQLException {
         ReviewObject ro = new ReviewObject();
-        String sql = "select id, rating, recommend_friend, weight, pros, cons, advice,name from reviews_task where company_id = ?";
+        String sql = "select id, rating, recommend_friend, weight, pros, cons, advice,name from reviews_task where company_id = ? order by weight desc";
         try (PreparedStatement psmt = conn.prepareStatement(sql);) {
             psmt.setInt(1, companyId);
             try (ResultSet resultSet = psmt.executeQuery();) {
@@ -106,6 +106,40 @@ public class DBService {
     }
 
 
+    public static List<Review> fetchNextWithoutAnn(Connection connection, String ann) throws SQLException {
+        List<Review> reviews = new ArrayList<>();
+        String sql = "select id, pros, cons, advice from reviews_task where ann != ?";
+        try (PreparedStatement psmt = connection.prepareStatement(sql)) {
+            psmt.setString(1, ann);
+            try (ResultSet resultSet = psmt.executeQuery()) {
+                while (resultSet.next()) {
+                    int id = resultSet.getInt("id");
+                    String pros = resultSet.getString("pros");
+                    String advice = resultSet.getString("advice");
+                    String cons = resultSet.getString("cons");
+
+                    Review review = new Review();
+                    review.setText(pros);
+                    review.setId(id);
+
+                    Review review2 = new Review();
+                    review2.setId(id);
+                    review2.setText(advice);
+
+                    Review review3 = new Review();
+                    review3.setText(cons);
+                    review3.setId(id);
+
+                    reviews.add(review);
+                    reviews.add(review2);
+                    reviews.add(review3);
+                }
+            }
+        }
+        return reviews;
+    }
+
+
     public static Connection fetchConnection() {
         Connection connection = null;
         boolean flag = false;
@@ -135,4 +169,16 @@ public class DBService {
             return conn;
         }
     };
+
+    public static void insertAnnotate(Connection connection, int id, int proScore, int conScore, int advScore, String ann) throws SQLException {
+        String sql = "insert annotation(id, proScore, conScore, advScore, ann) values(?, ?, ?, ?, ?)";
+        try (PreparedStatement psmt = connection.prepareStatement(sql)) {
+            psmt.setInt(1, id);
+            psmt.setInt(2, proScore);
+            psmt.setInt(3, conScore);
+            psmt.setInt(4, advScore);
+            psmt.setString(5, ann);
+            psmt.executeUpdate();
+        }
+    }
 }

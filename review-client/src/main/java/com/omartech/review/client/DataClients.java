@@ -82,6 +82,29 @@ public class DataClients {
     }
 
    // auto generated code, do not edit
+   public TFIDFStatusResponse tfidfStatus(ServerStatusRequest req) throws ClientException {
+        ThriftClient client = null;
+        Exception e = null;
+
+        for (int i = 0; i < TRY_COUNT; i++) {
+            try {
+                client = pool.getClient(client);
+                TFIDFStatusResponse resp = client.client.tfidfStatus(req);
+                pool.returnClient(client);
+                return resp;
+                
+            } catch (TException e1) {
+                e = e1;
+                if (client != null) {
+                    pool.returnBrokenClient(client);
+                }
+                // retry
+            }
+        }
+        throw new ClientException(e);
+    }
+
+   // auto generated code, do not edit
    public ReviewFeatureResponse findFeatures(SentenceRequest req) throws ClientException {
         ThriftClient client = null;
         Exception e = null;
@@ -113,6 +136,29 @@ public class DataClients {
             try {
                 client = pool.getClient(client);
                 ReviewFeatureResponse resp = client.client.fetchWholeFeatures();
+                pool.returnClient(client);
+                return resp;
+                
+            } catch (TException e1) {
+                e = e1;
+                if (client != null) {
+                    pool.returnBrokenClient(client);
+                }
+                // retry
+            }
+        }
+        throw new ClientException(e);
+    }
+
+   // auto generated code, do not edit
+   public ExtralTFResponse findExtralTF(ExtralTFRequest req) throws ClientException {
+        ThriftClient client = null;
+        Exception e = null;
+
+        for (int i = 0; i < TRY_COUNT; i++) {
+            try {
+                client = pool.getClient(client);
+                ExtralTFResponse resp = client.client.findExtralTF(req);
                 pool.returnClient(client);
                 return resp;
                 

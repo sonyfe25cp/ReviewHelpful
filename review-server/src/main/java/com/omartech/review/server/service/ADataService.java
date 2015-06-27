@@ -14,6 +14,11 @@ public class ADataService extends AIndexSearcher implements DataService.Iface {
     }
 
     @Override
+    public TFIDFStatusResponse tfidfStatus(ServerStatusRequest req) throws TException {
+        throw new TException();
+    }
+
+    @Override
     public SentenceResponse sendSentence(SentenceRequest req) throws TException {
         throw new TException();
     }
@@ -25,6 +30,11 @@ public class ADataService extends AIndexSearcher implements DataService.Iface {
 
     @Override
     public ReviewFeatureResponse fetchWholeFeatures() throws TException {
+        throw new TException();
+    }
+
+    @Override
+    public ExtralTFResponse findExtralTF(ExtralTFRequest req) throws TException {
         throw new TException();
     }
 }

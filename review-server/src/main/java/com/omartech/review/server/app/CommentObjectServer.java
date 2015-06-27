@@ -182,6 +182,14 @@ public class CommentObjectServer extends ADataService {
         Set<String> strings = aMap.keySet();
         Set<String> strings1 = nMap.keySet();
 
+        for (Map.Entry<String, Integer> entry : aMap.entrySet()) {
+            logger.info("{} -- {}", entry.getKey(), entry.getValue());
+        }
+        logger.info("**************************************");
+        for (Map.Entry<String, Integer> entry : nMap.entrySet()) {
+            logger.info("{} -- {}", entry.getKey(), entry.getValue());
+        }
+
         ReviewFeatureResponse response = new ReviewFeatureResponse();
         response.setWords(new ArrayList<String>(strings1));
         response.setAdjs(new ArrayList<String>(strings));

@@ -31,14 +31,18 @@
         <td>${statReviewCount.id}</td>
         <td>${statReviewCount.name}</td>
         <td>${statReviewCount.count}</td>
-        <td><a href="/show?id=${statReviewCount.id?c}&goodOrBad=1">查看好评</a></td>
-        <td><a href="/show?id=${statReviewCount.id?c}&goodOrBad=2">查看差评</a></td>
-        <td><a href="/show?id=${statReviewCount.id?c}&goodOrBad=3">查看建议</a></td>
+
+        <td>
+            <a href="/showReviews?id=${statReviewCount.id?c}&goodOrBad=1">查看原始评论</a>
+            <a href="/show?id=${statReviewCount.id?c}&goodOrBad=1">查看好评聚类</a>
+            <a href="/show?id=${statReviewCount.id?c}&goodOrBad=2">查看差评聚类</a>
+            <a href="/show?id=${statReviewCount.id?c}&goodOrBad=3">查看建议聚类</a>
+        </td>
     <#--<td><a href="./${statReviewCount.id?c}-details.html">查看ALL</a></td>-->
     </tr>
     </#list>
     </tbody>
 </table>
-<script src="/js/adaa.js"></script>
+<#--<script src="/js/adaa.js"></script>-->
 </body>
 </html>

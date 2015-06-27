@@ -11,6 +11,7 @@ public class Review {
     private int recommend_friend;
     private int rating;
     private boolean centroid;//是中心点
+    private String ann;//标注者
 
 
     public int getWeight() {
@@ -67,5 +68,13 @@ public class Review {
 
     public void setCentroid(boolean centroid) {
         this.centroid = centroid;
+    }
+
+    public String getAnn() {
+        return ann;
+    }
+
+    public void setAnn(String ann) {
+        this.ann = ann;
     }
 }
