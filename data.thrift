@@ -44,6 +44,20 @@ struct ExtralTFResponse{
   1: i32 count
 }
 
+struct Review{
+  1: string title,
+  2: string body,
+}
+
+struct FeatureRequest{
+  1: Review review,
+}
+
+struct FeatureResponse{
+  1: FeatureRequest req,
+  2: i32 length,
+  3: list<double> vector,
+}
 
 
 service DataService{
@@ -59,6 +73,8 @@ service DataService{
   ReviewFeatureResponse fetchWholeFeatures()//返回当前server中所有features
 
   ExtralTFResponse findExtralTF(1: ExtralTFRequest req)//返回外部词典中的tf
+
+  FeatureResponse extractFeature(1: FeatureRequest req)//返回特征
 
 }
 

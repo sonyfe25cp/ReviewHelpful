@@ -173,4 +173,27 @@ public class DataClients {
         throw new ClientException(e);
     }
 
+   // auto generated code, do not edit
+   public FeatureResponse extractFeature(FeatureRequest req) throws ClientException {
+        ThriftClient client = null;
+        Exception e = null;
+
+        for (int i = 0; i < TRY_COUNT; i++) {
+            try {
+                client = pool.getClient(client);
+                FeatureResponse resp = client.client.extractFeature(req);
+                pool.returnClient(client);
+                return resp;
+                
+            } catch (TException e1) {
+                e = e1;
+                if (client != null) {
+                    pool.returnBrokenClient(client);
+                }
+                // retry
+            }
+        }
+        throw new ClientException(e);
+    }
+
 }

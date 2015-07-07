@@ -37,4 +37,9 @@ public class ADataService extends AIndexSearcher implements DataService.Iface {
     public ExtralTFResponse findExtralTF(ExtralTFRequest req) throws TException {
         throw new TException();
     }
+
+    @Override
+    public FeatureResponse extractFeature(FeatureRequest req) throws TException {
+        throw new TException();
+    }
 }
