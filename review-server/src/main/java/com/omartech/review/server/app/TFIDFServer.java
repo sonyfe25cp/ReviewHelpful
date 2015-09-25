@@ -23,8 +23,9 @@ public class TFIDFServer extends ADataService {
 
     @Override
     protected void after() {
-        vocabulary.setFilterSingleWord(true);
-        vocabulary.setAutoFilter(true);
+        vocabulary.setFilterSingleWord(false);
+        vocabulary.setAutoFilter(false);
+        vocabulary.setDebug(false);
     }
 
     @Override

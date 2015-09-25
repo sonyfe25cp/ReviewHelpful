@@ -18,9 +18,9 @@ import java.util.List;
 public class InformationFeatureServer extends ADataService {
 
 //    1 The number of sentences in the review √
-//    2 The average length of sentences
-//    3 The number of sentences with product features
-//    4 The number of words in the review
+//    2 The average length of sentences √
+//    3 The number of sentences with product features √
+//    4 The number of words in the review √
 //    5 The number of products in the review
 //    6 The number of products in the title of a review
 //    7 The number of brand names

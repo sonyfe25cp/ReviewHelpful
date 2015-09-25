@@ -38,7 +38,7 @@ public class TestTFIDFServer {
         }
         Map<Integer, Double> positionMap = tfidfResponse.getPositionMap();
         for (Map.Entry<Integer, Double> entry : positionMap.entrySet()) {
-            System.out.println(entry.getKey() + "  -- " + entry.getValue());
+            System.out.println("位置:"+entry.getKey() + "  -- " + entry.getValue());
         }
 
     }
