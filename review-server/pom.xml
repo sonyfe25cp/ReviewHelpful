@@ -217,7 +217,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.omartech.engine.app.WeixinAccountSearcher</mainClass>
+                            <mainClass>com.omartech.review.server.app.TFIDFServer</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

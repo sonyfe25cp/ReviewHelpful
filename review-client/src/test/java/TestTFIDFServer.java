@@ -12,20 +12,21 @@ import java.util.Map;
 public class TestTFIDFServer {
 
     public static void main(String[] args) throws ClientException {
-        DataClients clients = new DataClients("127.0.0.1:8123,127.0.0.1:8123");
+        DataClients clients = new DataClients("10.1.0.171:8123,10.1.0.171:8123");
+//        DataClients clients = new DataClients("127.0.0.1:8123,127.0.0.1:8123");
 
-        SentenceRequest clearReq = new SentenceRequest();
-        clearReq.setClear(true);
-        clients.sendSentence(clearReq);
-
-        SentenceRequest sr1 = new SentenceRequest();
-        sr1.setSentence("我爱北京天安门");
-        SentenceRequest sr2 = new SentenceRequest();
-        sr2.setSentence("天安门上太阳升");
-        sr2.setOver(true);
-
-        clients.sendSentence(sr1);
-        clients.sendSentence(sr2);
+//        SentenceRequest clearReq = new SentenceRequest();
+//        clearReq.setClear(true);
+//        clients.sendSentence(clearReq);
+//
+//        SentenceRequest sr1 = new SentenceRequest();
+//        sr1.setSentence("我爱北京天安门");
+//        SentenceRequest sr2 = new SentenceRequest();
+//        sr2.setSentence("天安门上太阳升");
+//        sr2.setOver(true);
+//
+//        clients.sendSentence(sr1);
+//        clients.sendSentence(sr2);
 
         String sentence = "北京天安门真好看";
 
@@ -40,6 +41,7 @@ public class TestTFIDFServer {
         for (Map.Entry<Integer, Double> entry : positionMap.entrySet()) {
             System.out.println("位置:"+entry.getKey() + "  -- " + entry.getValue());
         }
+        System.out.println("词典总次数:"+tfidfResponse.getLexiconSize());
 
     }
 
