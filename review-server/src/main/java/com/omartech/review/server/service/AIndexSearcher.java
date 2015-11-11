@@ -37,6 +37,9 @@ public abstract class AIndexSearcher<T> extends AIndexService implements DataSer
     @Option(name = "-ns", usage = "whether this is a search service, if not, no index is need")
     protected boolean notSearch = false;
 
+    @Option(name = "-debug", usage = "set the debug info")
+    protected boolean debug = false;
+
     private void bindAndListen() throws TTransportException {
         if (this.port < 0) {
             return;

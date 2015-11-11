@@ -6,6 +6,7 @@ import com.omartech.utils.vocabulary.Vocabulary;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.thrift.TException;
+import org.kohsuke.args4j.Option;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -21,11 +22,14 @@ public class TFIDFServer extends ADataService {
 
     private static int num = 0;
 
+    @Option(name = "-filter", usage = "set the autoFilter")
+    private boolean autoFilter = false;
+
     @Override
     protected void after() {
         vocabulary.setFilterSingleWord(false);
-        vocabulary.setAutoFilter(false);
-        vocabulary.setDebug(false);
+        vocabulary.setAutoFilter(autoFilter);
+        vocabulary.setDebug(debug);
     }
 
     @Override
