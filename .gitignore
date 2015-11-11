@@ -13,3 +13,5 @@ extralData
 perComPerLine
 featuresSelection
 gen-java/
+data/
+output/
