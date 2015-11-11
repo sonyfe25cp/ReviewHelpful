@@ -21,11 +21,11 @@
 
 2. 不管要吃饭、要上课还是要去睡觉，要记得
 
-    git status
-    git add .
-    git commit -m "写备注"
-    git status
-    git push origin master
+    * git status
+    * git add .
+    * git commit -m "写备注"
+    * git status
+    * git push origin master
 
 3. 遇到了冲突之类的情况，在IDE中打开冲突的文件，
 认真看
