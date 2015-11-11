@@ -1,8 +1,15 @@
-Readme
+#UGC有用性判断
 
 ##使用说明
 
 ###Git
+0. 先在本机workspace下执行 
+git clone git@github.com:sonyfe25cp/ReviewHelpful.git
+等下载完，然后打开IDE，导入现有项目
+在POM.XML上右键->add 什么maven项目（一般是最下面的那项）
+然后再右键maven-》reimport
+等下载完依赖包就行了
+
 1. 不管什么时候要开始写代码，首先执行
 git pull origin master
 
