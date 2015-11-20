@@ -141,6 +141,12 @@
             <artifactId>httpclient</artifactId>
             <version>4.3.2</version>
         </dependency>
+        <dependency>
+          <groupId>edu.stanford.nlp</groupId>
+          <artifactId>stanford-parser</artifactId>
+          <version>3.5.2</version>
+        </dependency>
+
     </dependencies>
     <build>
         <resources>
