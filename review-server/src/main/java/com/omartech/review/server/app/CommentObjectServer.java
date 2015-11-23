@@ -196,13 +196,6 @@ public class CommentObjectServer extends ADataService {
         return response;
     }
 
-    public static void main(String[] args) {
-        CommentObjectServer commentObjectServer = new CommentObjectServer();
-        commentObjectServer.notSearch = true;
-        commentObjectServer.port = 8124;
-        commentObjectServer.parseArgsAndRun(args);
-    }
-
 
     public static String removePOS(String string) {
         String s2 = string.replaceAll("(_.+)", "");
@@ -262,6 +255,13 @@ public class CommentObjectServer extends ADataService {
             }
         }
         return false;
+    }
+
+    public static void main(String[] args) {
+        CommentObjectServer commentObjectServer = new CommentObjectServer();
+        commentObjectServer.notSearch = true;
+        commentObjectServer.port = 8124;
+        commentObjectServer.parseArgsAndRun(args);
     }
 }
 
