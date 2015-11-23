@@ -33,21 +33,17 @@ public class NewWordDetection {
         logger.info("====================================");
         int totalWordCount = allSubSentences.size();
         logger.info("总字数: {}", totalWordCount);
-        Map<String, Integer> subStringCountMap = extractCount(n, false, allSubSentences);
-        Map<String, Integer> subStringPrefixCountMap = extractCount(n, true, allSubSentences);
+        Map<String, Integer> subStringCountMap = extractCount(n, false, allSubSentences);//词，该词出现的次数
+        Map<String, Integer> subStringPrefixCountMap = extractCount(n, true, allSubSentences);//词，该词作为前缀出现的次数
 
 
-        List<String> sortTempList = new ArrayList<>(subStringCountMap.keySet());
-        Collections.sort(sortTempList);
-        for (String key : sortTempList) {
-            logger.info("{} count: {}, {} is prefix count: {}", new String[]{key, subStringCountMap.get(key) + "", key, subStringPrefixCountMap.get(key) + ""});
-        }
+
+
 
         return potentialWords;
     }
 
     private static Map<String, Integer> extractCount(int n, boolean prefix, List<String> allSubSentences) {
-
 
         logger.info("====================================");
         if (prefix) {
@@ -61,59 +57,63 @@ public class NewWordDetection {
         for (int i = 1; i <= n; i++) {
 
             int begin = 0;
-            int end = 1;
+            int end = 0;
             int times = 0;
+
             while (begin < allSubSentences.size()) {
-
                 String beginSentence = allSubSentences.get(begin);
-
                 if (beginSentence.length() < i) {
                     begin++;
-                    end++;
+                    end = begin;
                     times = 0;
                     continue;
                 }
-
                 String beginStr = beginSentence.substring(0, i);
 
-                String endSentence = allSubSentences.get(end);
-
-                if (endSentence.length() < i) {
-                    begin = end;
-                    end++;
-                    subStringCountMap.put(beginStr, times);
-                    times = 0;
-                    continue;
-                }
-
-                String endStr = endSentence;
-                if (prefix) {
-                    int endLength = endStr.length();
-                    int beginLength = beginStr.length();
-                    if ((endLength > beginLength) && endStr.startsWith(beginStr)) {
-                        end++;
-                        times++;
-                        logger.info(beginStr + " : " + times);
-                        subStringCountMap.put(beginStr, times);
+                if (end < allSubSentences.size()) {
+                    String endSentence = allSubSentences.get(end);
+                    if (prefix) {
+                        if (beginSentence.length() <= (i + 1)) {
+                            begin++;
+                            end = begin;
+                            times = 0;
+                            continue;
+                        }
+                        beginStr = beginSentence.substring(0, i + 1);
+                        if (endSentence.length() > beginStr.length() && endSentence.startsWith(beginStr)) {
+                            end++;
+                            times++;
+                            subStringCountMap.put(beginStr, times);
+                        } else {
+                            begin = end;
+                            times = 0;
+                        }
                     } else {
-                        begin = end;
-                        end++;
-                        times = 0;
+                        if (endSentence.length() < i) {
+                            begin = end + 1;
+                            end = begin;
+                            times = 0;
+                        } else {
+                            endSentence = endSentence.substring(0, i);
+                            if (endSentence.equals(beginStr)) {
+                                times++;
+                                end++;
+                                subStringCountMap.put(beginStr, times);
+                            } else {
+                                begin = end;
+                                times = 0;
+                            }
+                        }
                     }
                 } else {
-                    endStr = endSentence.substring(0, i);
-                    if (beginStr.equals(endStr)) {
-                        end++;
-                        times++;
-                        logger.info(beginStr + " : " + times);
-                        subStringCountMap.put(beginStr, times);
-                    } else {
-                        begin = end;
-                        end++;
-                        times = 0;
-                    }
+                    begin = end;
                 }
             }
+        }
+        List<String> sortTempList = new ArrayList<>(subStringCountMap.keySet());
+        Collections.sort(sortTempList);
+        for (String key : sortTempList) {
+            logger.info("{} count: {} ", new String[]{key, subStringCountMap.get(key) + ""});
         }
         return subStringCountMap;
     }
