@@ -27,8 +27,16 @@ public class NewWordDetection {
     File dataFile;
     int wordLength = 5;
 
-    File postfixFile;
-    File prefixFile;
+
+    File postfixFile;//以该词为开头的词的文件
+    File postfixCountFile;//以该词为开头的词的个数
+
+    File prefixFile;//以该词为结尾的词的文件
+    File prefixCountFile;//以该词为结尾的词的个数
+
+    File wordCountFile;//该词出现的次数
+    int wordCount;//该文件的总字数
+
     File cleanFile;
 
     File wordNingjuFile;
@@ -48,6 +56,9 @@ public class NewWordDetection {
         prefixFile = new File("output/prefix-" + name);
         wordNingjuFile = new File("output/ningju-" + name);
         wordEntropyFile = new File("output/entropy-" + name);
+        wordCountFile = new File("output/wordcount-"+name);
+        prefixCountFile = new File("output/prefixCount-"+name);
+        postfixCountFile = new File("output/postfixCount-"+name);
 
         logger.info("数据文件: {}", filePath);
         logger.info("清洗后的文件: {}", cleanFile.getAbsolutePath());
@@ -55,17 +66,48 @@ public class NewWordDetection {
         logger.info("前缀表示文件: {}", prefixFile.getAbsolutePath());
         logger.info("词语凝聚度文件: {}", wordNingjuFile.getAbsolutePath());
         logger.info("词语信息量文件: {}", wordEntropyFile.getAbsolutePath());
+        logger.info("词语统计文件: {}", wordCountFile.getAbsolutePath());
+        logger.info("该词为开头的数目文件: {}", postfixCountFile.getAbsolutePath());
+        logger.info("该词为结尾的数目文件: {}", prefixCountFile.getAbsolutePath());
     }
 
     void process() {
         init();
         try {
             //清洗文件
-            cleanTxt(dataFile, cleanFile);
-            //生成后缀文件
-            generatePostfixFile(cleanFile);
-            //生成前缀文件
-            generatePrefixFile(cleanFile);
+            String text = cleanTxt(dataFile);
+            FileUtils.write(cleanFile, text);
+            logger.info("清洗文件 over");
+
+            //生成以该词开头的文件
+            List<String> postfixLines = generatePostfixFile(cleanFile);
+            logger.info("生成以该词开头的文件 over");
+
+            //生成以该词结尾的文件
+            List<String> prefixLines = generatePrefixFile(cleanFile);
+            logger.info("生成以该词结尾的文件 over");
+
+            //统计长度小于等于n的词语，该词的个数
+            Map<String, Integer> wordCountMap = extractCount(wordLength, false, postfixLines);//词，该词出现的次数
+            writeStringIntegerMapIntoFile(wordCountMap, wordCountFile);
+            wordCount = postfixLines.size();
+            logger.info("统计长度小于等于n的词语，该词的个数 over");
+
+            //统计长度小于等于n的词语，以该词为开头的词的个数
+            Map<String, Integer> postfixCountMap = extractCount(wordLength, true, postfixLines);//词，该词出现的次数
+            writeStringIntegerMapIntoFile(postfixCountMap, postfixCountFile);
+            logger.info("统计长度小于等于n的词语，以该词为开头的词的个数 over");
+
+            //统计长度小于等于n的词，以该词为结尾的词的个数
+            Map<String, Integer> prefixCountMap = extractCount(wordLength, true, prefixLines);//词，该词出现的次数
+            writeStringIntegerMapIntoFile(prefixCountMap, prefixCountFile);
+            logger.info("统计长度小于等于n的词，以该词为结尾的词的个数 over");
+
+            //计算内聚度
+            Map<String, Double> ningjieduMap = computeNeijudu(wordCountMap, wordCount);
+            writeStringDoubleMapIntoFile(ningjieduMap, wordNingjuFile);
+            logger.info("计算内聚度 over");
+            //计算信息熵
 
 
         } catch (IOException e) {
@@ -74,25 +116,77 @@ public class NewWordDetection {
 
     }
 
+    private Map<String, Double> computeNeijudu(Map<String, Integer> wordCountMap, int wordCount) {
+        Map<String, Double> ningjieMap = new HashMap<>();
+        for (String key : wordCountMap.keySet()) {
+            if (key.length() > 1) {//从2个字的开始
+
+                Integer count = wordCountMap.get(key);
+                double pa = (double) count / wordCount;
+
+                Map<String, String> children = cutStringIntoArray(key);
+                double max = 0;
+                for (Map.Entry<String, String> entry : children.entrySet()) {
+                    String key1 = entry.getKey();
+                    String value = entry.getValue();
+
+                    double pkey1 = (double) wordCountMap.get(key1) / wordCount;
+                    double pvalue = (double) wordCountMap.get(value) / wordCount;
+
+                    double multi = pkey1 * pvalue;
+                    if (multi >= max) {
+                        max = multi;
+                    }
+                }
+
+                double ningjiedu = pa / max;
+                ningjieMap.put(key, ningjiedu);
+            }
+        }
+        return ningjieMap;
+    }
+
+    private void writeStringDoubleMapIntoFile(Map<String, Double> subStringCountMap, File postfixCountFile) {
+        try {
+            for (Map.Entry<String, Double> entry : subStringCountMap.entrySet()) {
+                FileUtils.write(postfixCountFile, entry.getKey() + " " + entry.getValue() + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void writeStringIntegerMapIntoFile(Map<String, Integer> subStringCountMap, File postfixCountFile) {
+        try {
+            for (Map.Entry<String, Integer> entry : subStringCountMap.entrySet()) {
+                FileUtils.write(postfixCountFile, entry.getKey() + " " + entry.getValue() + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     //    Pattern pattern = Pattern.compile("[^\\dA-Za-z\\u3007\\u3400-\\u4DB5\\u4E00-\\u9FCB\\uE815-\\uE864]");//去掉非汉字，英文，数字
     Pattern pattern = Pattern.compile("[^\\u3007\\u3400-\\u4DB5\\u4E00-\\u9FCB\\uE815-\\uE864]");//去掉非汉字
 
-    private void cleanTxt(File input, File output) throws IOException {
+    private String cleanTxt(File input) throws IOException {
         String string = FileUtils.readFileToString(input);
         Matcher matcher = pattern.matcher(string);
         string = matcher.replaceAll(" ");
-        FileUtils.write(output, string);
+        string = string.replaceAll(" ", " ");
+
+        return string;
     }
 
-    private void generatePrefixFile(File file) throws IOException {
-        generateXXfixFile(file, prefixFile, wordLength, true);
+    private List<String> generatePrefixFile(File file) throws IOException {
+        return generateXXfixFile(file, prefixFile, wordLength, true);
     }
 
-    void generatePostfixFile(File file) throws IOException {
-        generateXXfixFile(file, postfixFile, wordLength, false);
+    private List<String> generatePostfixFile(File file) throws IOException {
+        return generateXXfixFile(file, postfixFile, wordLength, false);
     }
 
-    static void generateXXfixFile(File input, File output, int wordLength, boolean reverse) throws IOException {
+    static List<String> generateXXfixFile(File input, File output, int wordLength, boolean reverse) throws IOException {
         String body = FileUtils.readFileToString(input);
         List<String> sentences = cutSentences(body);
         List<String> allSubSentences = new ArrayList<>();
@@ -108,6 +202,7 @@ public class NewWordDetection {
         }
         Collections.sort(allSubSentences);
         FileUtils.writeLines(output, allSubSentences);
+        return allSubSentences;
     }
 
 
@@ -200,6 +295,9 @@ public class NewWordDetection {
             }
         }
 
+        /**
+         * 保存内聚度结果
+         */
         List<Map.Entry<String, Double>> tmpNingjieList = new ArrayList<>(ningjieMap.entrySet());
         Utils.sortMapStringAndDouble(tmpNingjieList, true);
         if (wordNingjuFile.exists()) {
@@ -217,6 +315,9 @@ public class NewWordDetection {
 //                logger.info("{} -- {}", entry.getKey(), entry.getValue());
 //            }
         }
+        /**
+         * 计算信息熵
+         */
         for (String key : subStringCountMap.keySet()) {
             if (key.length() > 1) {//从2个字的开始
 
@@ -238,12 +339,6 @@ public class NewWordDetection {
         }
 
         if (info) {
-//        List<Map.Entry<String, Double>> tmpNingjieList = new ArrayList<>(ningjieMap.entrySet());
-//        Utils.sortMapStringAndDouble(tmpNingjieList, true);
-//        for (Map.Entry<String, Double> entry : tmpNingjieList) {
-//            logger.info("{} -- {}", entry.getKey(), entry.getValue());
-//        }
-
             List<Map.Entry<String, Double>> tmpEntropyList = new ArrayList<>(entropyMap.entrySet());
             Utils.sortMapStringAndDouble(tmpEntropyList, true);
 //            Collections.sort(tmpEntropyList, new Comparator<Map.Entry<String, Double>>() {
@@ -423,14 +518,14 @@ public class NewWordDetection {
         String str = "我爱北京天安门，天安门上太阳升。我爱吃苹果，天安门有好多人在看天安门的桥。";
 //        String str = "四是四十是十十四是十四 四十是四十";
 //        newWordDetection.findPotentialWords(str, 5);
-        newWordDetection.findyuguo();
+//        newWordDetection.findyuguo();
 
 //        Map<String, String> map = cutStringIntoArray("北京一家人");
 //        for (Map.Entry<String, String> entry : map.entrySet()) {
 //            logger.info(entry.getKey() + "          " + entry.getValue());
 //        }
-//        newWordDetection.filePath = "data/yuguo.txt";
-//        newWordDetection.process();
+        newWordDetection.filePath = "data/yuguo.txt";
+        newWordDetection.process();
     }
 
 }
