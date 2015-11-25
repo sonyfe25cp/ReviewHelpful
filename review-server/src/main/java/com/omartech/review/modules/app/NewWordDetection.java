@@ -1,14 +1,16 @@
 package com.omartech.review.modules.app;
 
 import com.omartech.utils.Utils;
+import org.ansj.domain.Term;
+import org.ansj.splitWord.analysis.ToAnalysis;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -18,6 +20,8 @@ import java.util.regex.Pattern;
  * Created by OmarTech on 15-11-23.
  */
 public class NewWordDetection {
+    private static final Double NEIJUTHETA = 20.0;
+    private static final Double COMBINETHETA = 5.0;
     static Logger logger = LoggerFactory.getLogger(NewWordDetection.class);
 
     boolean info = true;
@@ -25,7 +29,7 @@ public class NewWordDetection {
 
     String filePath = null;
     File dataFile;
-    int wordLength = 5;
+    int wordLength = 6;
 
 
     File postfixFile;//以该词为开头的词的文件
@@ -37,10 +41,16 @@ public class NewWordDetection {
     File wordCountFile;//该词出现的次数
     int wordCount;//该文件的总字数
 
+    File wordLeftEntropyFile;
+    File wordRightEntropyFile;
+    File wordMergedEntropyFile;
+    File wordCombineScoreFile;
     File cleanFile;
+    File potentialWordsFile;
 
     File wordNingjuFile;
     File wordEntropyFile;
+    File analysisFile;
 
     void init() {
 
@@ -59,6 +69,12 @@ public class NewWordDetection {
         wordCountFile = new File("output/wordcount-"+name);
         prefixCountFile = new File("output/prefixCount-"+name);
         postfixCountFile = new File("output/postfixCount-"+name);
+        wordLeftEntropyFile = new File("output/leftEntropy-"+name);
+        wordRightEntropyFile = new File("output/rightEntropy-"+name);
+        wordMergedEntropyFile = new File("output/mergedEntropy-"+name);
+        wordCombineScoreFile = new File("output/combineScore-"+name);
+        analysisFile = new File("output/analysis-"+name);
+        potentialWordsFile = new File("output/potentitalwords-"+name);
 
         logger.info("数据文件: {}", filePath);
         logger.info("清洗后的文件: {}", cleanFile.getAbsolutePath());
@@ -69,9 +85,17 @@ public class NewWordDetection {
         logger.info("词语统计文件: {}", wordCountFile.getAbsolutePath());
         logger.info("该词为开头的数目文件: {}", postfixCountFile.getAbsolutePath());
         logger.info("该词为结尾的数目文件: {}", prefixCountFile.getAbsolutePath());
+        logger.info("该词LeftEntropy文件: {}", wordLeftEntropyFile.getAbsolutePath());
+        logger.info("该词RightEntropy文件: {}", wordRightEntropyFile.getAbsolutePath());
+        logger.info("该词MergedEntropy文件: {}", wordMergedEntropyFile.getAbsolutePath());
+        logger.info("该词CombineScore文件: {}", wordCombineScoreFile.getAbsolutePath());
+        logger.info("该词Analysis文件: {}", analysisFile.getAbsolutePath());
+        logger.info("该词Potential文件: {}", potentialWordsFile.getAbsolutePath());
+
     }
 
     void process() {
+        long l1 = System.currentTimeMillis();
         init();
         try {
             //清洗文件
@@ -108,12 +132,225 @@ public class NewWordDetection {
             writeStringDoubleMapIntoFile(ningjieduMap, wordNingjuFile);
             logger.info("计算内聚度 over");
             //计算信息熵
+            Map<String, Double> leftEntropyMap = computeEntropy(wordCountMap, prefixLines, true);
+            writeStringDoubleMapIntoFile(leftEntropyMap, wordLeftEntropyFile);
+            logger.info("计算leftEntropy over");
+            Map<String, Double> rightEntropyMap = computeEntropy(wordCountMap, postfixLines, false);
+            writeStringDoubleMapIntoFile(rightEntropyMap, wordRightEntropyFile);
+            logger.info("计算RightEntropy over");
 
+            //Merge left entropy with right entropy
+            Map<String, Double> mergeEntropyMap = computeMergeEntropy(leftEntropyMap, rightEntropyMap);
+            writeStringDoubleMapIntoFile(mergeEntropyMap, wordMergedEntropyFile);
+            logger.info("计算MergedEntropy over");
+
+            //Combine both neiju and entropy
+            Map<String, Double> combineScoreMap = computeMergeEntropy(mergeEntropyMap, ningjieduMap);
+            writeStringDoubleMapIntoFile(combineScoreMap, wordCombineScoreFile);
+            logger.info("计算combineScoreMap over");
+
+            //Analysis all results
+            List<String> candidates = analysis(combineScoreMap, mergeEntropyMap, leftEntropyMap, rightEntropyMap, ningjieduMap, analysisFile);
+            logger.info("Analysis file over");
+
+            //Original words
+            Set<String> terms = fetchOriginalWords(text);
+            logger.info("fetch original words over");
+
+            List<String> potentialWords = compare(terms, candidates);
+            FileUtils.writeLines(potentialWordsFile, potentialWords);
+            logger.info("{} potential new words are found from {} candidates.", potentialWords.size(), candidates.size());
+            logger.info("Compute Potential words list over");
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+        long l2 = System.currentTimeMillis();
+        logger.info("Compute completed, cost {}s", (l2-l1)/1000.0);
+    }
 
+    private List<String> compare(Set<String> set, List<String> candidates) {
+        List<String> list = new ArrayList<>();
+        for(String tmp : candidates){
+            if(!set.contains(tmp)){
+                list.add(tmp);
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Original words about text
+     * @param text
+     * @return
+     */
+    private Set<String> fetchOriginalWords(String text) {
+        Set<String> set = new HashSet<>();
+        int batch = 100000;
+        for(int i = 0; i < text.length(); i = i + batch) {
+            int end = (i+batch) > text.length() ? text.length() : (i+batch);
+            String part = text.substring(i, end);
+            List<Term> terms = ToAnalysis.parse(part);
+            for (Term term : terms) {
+                set.add(term.getName());
+            }
+        }
+        return set;
+    }
+
+    private List<String> analysis(Map<String, Double> combineScoreMap, Map<String, Double> mergeEntropyMap, Map<String, Double> leftEntropyMap, Map<String, Double> rightEntropyMap, Map<String, Double> ningjieduMap, File analysisFile) {
+        if(analysisFile.exists()){
+            analysisFile.delete();
+        }
+        List<String> candidates = new ArrayList<>();
+        List<Map.Entry<String, Double>> entries = extractSortList(combineScoreMap);
+        try(BufferedWriter bw = new BufferedWriter(new FileWriter(analysisFile))) {
+            for (Map.Entry<String, Double> entry : entries) {
+                String key = entry.getKey();
+                Double combine = entry.getValue();
+                if(combine < COMBINETHETA){
+                    continue;
+                }
+                Double ningjie = ningjieduMap.get(key);
+                if(ningjie < NEIJUTHETA){
+                    continue;
+                }
+                Double merge = mergeEntropyMap.get(key);
+                Double left = leftEntropyMap.get(key);
+                Double right = rightEntropyMap.get(key);
+                String str = key + "\t" + combine + "\t" + ningjie + "\t" + merge + "\t" + left + "\t" + right + "\t" + "\n";
+//                FileUtils.write(analysisFile, str, true);
+                bw.write(str);
+                candidates.add(key);
+            }
+            bw.flush();
+        }catch (Exception e ){
+            logger.error("File is broken");
+        }
+        return candidates;
+    }
+
+    private Map<String, Double> computeMergeEntropy(Map<String, Double> leftEntropyMap, Map<String, Double> rightEntropyMap) {
+       Map<String, Double> merged = new HashMap<>();
+        for(Map.Entry<String, Double> entry : leftEntropyMap.entrySet()){
+            String key = entry.getKey();
+            double left = entry.getValue();
+            Double right = rightEntropyMap.get(key);
+            double merge = left;
+            if(right != null && left != 0 && right !=0){
+                right = right.doubleValue();
+                merge = (2 * left * right) / (left + right);
+//                logger.info("left: {}, right:{}, merge:{}",new String[]{left+"", right+"", merge+""});
+            }else{
+                merge = 0;
+            }
+            merged.put(key, merge);
+        }
+        return merged;
+    }
+
+    private Map<String, Double> computeEntropy(Map<String, Integer> wordCountMap, List<String> lines, boolean reverse) {
+        Map<String, Double> entropyMap = new HashMap<>();
+        int c = 0;
+        for (String key : wordCountMap.keySet()) {
+            if(key.length()==1){//Single word is ignored
+                continue;
+            }
+            if(reverse) {
+                key = StringUtils.reverse(key);
+            }
+            List<String> lineswithWord = findLineswithWord(lines, key);
+            Map<String, Integer> summary = new HashMap<>();
+            for (String str : lineswithWord) {
+                String sub = str.substring(0, key.length()+1);
+                Integer intger = 0;
+                if (summary.containsKey(sub)) {
+                    intger = summary.get(sub);
+                }
+                intger++;
+                summary.put(sub, intger);
+            }
+            logger.debug("find {} lines start with {}", summary.size(), key);
+            double entropy = computeEntropyFunction(summary, lineswithWord.size());
+            if(reverse) {
+                key = StringUtils.reverse(key);
+            }
+            entropyMap.put(key, entropy);
+            c++;
+            if(c / 10000 == 0){
+                logger.info("{} words passed", c);
+            }
+        }
+        return entropyMap;
+    }
+
+    public List<String> findLineswithWord(List<String> lines, String word){
+        int length = lines.size()-1;
+        int begin = 0;
+        int end = length;
+        int anyposition = -1;
+        while(begin < end) {
+            String beginStr = lines.get(begin);
+            String endStr = lines.get(end);
+            if(endStr.compareTo(word) == -1 || beginStr.compareTo(word) == 1){
+                logger.error("There is no #{}# in the array.", word);
+                break;
+            }
+            int middle = 0;
+            if(beginStr.startsWith(word)){
+                anyposition = begin;
+                break;
+            }else if(endStr.startsWith(word)){
+                anyposition = end;
+                break;
+            }else{
+                middle = begin + (end - begin)/2;
+            }
+            String middleStr = lines.get(middle);
+            if(middleStr.compareTo(word) > 0){
+                end = middle -1;
+            }else{
+                begin = middle+1;
+            }
+        }
+        logger.debug("anyposition : {}", anyposition);
+
+        int beginPosition = anyposition;
+        //find the begin position of word
+        if(anyposition > 0){
+            for(int i = anyposition; i > 0; i --){
+                String str = lines.get(i);
+                if(str.startsWith(word)){
+                    beginPosition = i;
+                }else{
+                    break;
+                }
+            }
+        }
+        logger.debug("beginPositon : {}", beginPosition);
+        int endPosition = anyposition+1;
+        //find the end position of word
+        if(anyposition > 0  && anyposition < length){
+            for(int i = anyposition; i < length; i ++){
+                String str = lines.get(i);
+                if(str.startsWith(word)){
+                    endPosition = i;
+                }else{
+                    break;
+                }
+            }
+        }
+        logger.debug("endPosition: {}", endPosition);
+        List<String> rightLines = new ArrayList<>();
+        if(beginPosition != -1 && endPosition !=-1) {
+            for (int i = beginPosition; i < endPosition; i++) {
+                String current = lines.get(i);
+                if(!current.equals(word)){
+                    rightLines.add(current);
+                }
+            }
+        }
+        return rightLines;
     }
 
     private Map<String, Double> computeNeijudu(Map<String, Integer> wordCountMap, int wordCount) {
@@ -146,35 +383,58 @@ public class NewWordDetection {
         return ningjieMap;
     }
 
-    private void writeStringDoubleMapIntoFile(Map<String, Double> subStringCountMap, File postfixCountFile) {
-        try {
-            for (Map.Entry<String, Double> entry : subStringCountMap.entrySet()) {
-                FileUtils.write(postfixCountFile, entry.getKey() + " " + entry.getValue() + "\n");
+    private void writeStringDoubleMapIntoFile(Map<String, Double> subStringCountMap, File outputFile) {
+        try(BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile))) {
+            List<Map.Entry<String, Double>> entryList = extractSortList(subStringCountMap);
+            for (int i = 0 ; i < entryList.size(); i ++) {
+                Map.Entry<String, Double> entry = entryList.get(i);
+                String str = entry.getKey() + " " + entry.getValue() + "\n";
+                bw.write(str);
             }
+            bw.flush();
+//            FileUtils.write(outputFile, sb.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private List<Map.Entry<String, Double>> extractSortList(Map<String, Double> subStringCountMap) {
+        List<Map.Entry<String, Double>> entryList = new ArrayList<>(subStringCountMap.entrySet());
+        Collections.sort(entryList, new Comparator<Map.Entry<String, Double>>() {
+            @Override
+            public int compare(Map.Entry<String, Double> o1, Map.Entry<String, Double> o2) {
+                Double value = o1.getValue();
+                Double value1 = o2.getValue();
+                int compare = Double.compare(value1, value);
+                return compare;
+            }
+        });
+        return entryList;
     }
 
     private void writeStringIntegerMapIntoFile(Map<String, Integer> subStringCountMap, File postfixCountFile) {
         try {
-            for (Map.Entry<String, Integer> entry : subStringCountMap.entrySet()) {
-                FileUtils.write(postfixCountFile, entry.getKey() + " " + entry.getValue() + "\n");
+            List<Map.Entry<String, Integer>> entryList = new ArrayList<>(subStringCountMap.entrySet());
+            Utils.sortMapStringAndInteger(entryList, false);
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0 ; i < entryList.size(); i ++) {
+                Map.Entry<String, Integer> entry = entryList.get(i);
+                sb.append(entry.getKey() + " " + entry.getValue() + "\n");
             }
+            FileUtils.write(postfixCountFile, sb.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    //    Pattern pattern = Pattern.compile("[^\\dA-Za-z\\u3007\\u3400-\\u4DB5\\u4E00-\\u9FCB\\uE815-\\uE864]");//去掉非汉字，英文，数字
-    Pattern pattern = Pattern.compile("[^\\u3007\\u3400-\\u4DB5\\u4E00-\\u9FCB\\uE815-\\uE864]");//去掉非汉字
+        Pattern pattern = Pattern.compile("[^\\dA-Za-z\\u3007\\u3400-\\u4DB5\\u4E00-\\u9FCB\\uE815-\\uE864]");//去掉非汉字，英文，数字
+//    Pattern pattern = Pattern.compile("[^\\u3007\\u3400-\\u4DB5\\u4E00-\\u9FCB\\uE815-\\uE864]");//去掉非汉字
 
     private String cleanTxt(File input) throws IOException {
         String string = FileUtils.readFileToString(input);
         Matcher matcher = pattern.matcher(string);
         string = matcher.replaceAll(" ");
         string = string.replaceAll(" ", " ");
-
         return string;
     }
 
@@ -205,162 +465,7 @@ public class NewWordDetection {
         return allSubSentences;
     }
 
-
-    List<String> findPotentialWords(String body, int n) {
-
-
-        List<String> potentialWords = new ArrayList<>();
-
-        List<String> sentences = cutSentences(body);
-
-//正向
-        List<String> allSubSentences = new ArrayList<>();
-        for (String sentence : sentences) {
-            List<String> subSentences = subSentence(sentence, n + 1);
-            allSubSentences.addAll(subSentences);
-        }
-        logger.info("====================================");
-        Collections.sort(allSubSentences);
-
-        if (debug) {
-            for (String str : allSubSentences) {
-                logger.info(str);
-            }
-        }
-        logger.info("====================================");
-        int totalWordCount = allSubSentences.size();
-        logger.info("总字数: {}", totalWordCount);
-        Map<String, Integer> subStringCountMap = extractCount(n, false, allSubSentences);//词，该词出现的次数
-        Map<String, Integer> subStringPostfixCountMap = extractCount(n, true, allSubSentences);//词，该词作为前缀出现的次数
-
-        if (debug) {
-            logger.info("============词出现的次数========================");
-            bianliMap(subStringCountMap);
-
-            logger.info("=============以该词为前缀的词个数=======================");
-            bianliMap(subStringPostfixCountMap);
-        }
-        logger.info("=================开始计算逆向部分===================");
-        //逆向
-        List<String> allReverseSubSentences = new ArrayList<>();
-        for (String sentence : sentences) {
-            List<String> strings = subSentence(StringUtils.reverse(sentence), n + 1);
-            allReverseSubSentences.addAll(strings);
-        }
-        Collections.sort(allReverseSubSentences);
-        if (debug) {
-            for (String str : allReverseSubSentences) {
-                logger.info(str);
-            }
-        }
-
-        Map<String, Integer> tempStringPrefixCountMap = extractCount(n, true, allReverseSubSentences);//key也是逆向的
-        Map<String, Integer> reverseStringPrefixCountMap = new HashMap<>(tempStringPrefixCountMap.size());
-        for (Map.Entry<String, Integer> entry : tempStringPrefixCountMap.entrySet()) {//把key转为正向
-            reverseStringPrefixCountMap.put(StringUtils.reverse(entry.getKey()), entry.getValue());
-        }
-
-        if (debug) {
-            logger.info("=============以该词为后缀的词个数=======================");
-            bianliMap(reverseStringPrefixCountMap);
-        }
-        //开始计算凝结度和信息熵
-        Map<String, Double> ningjieMap = new HashMap<>();
-        Map<String, Double> entropyMap = new HashMap<>();
-
-
-        for (String key : subStringCountMap.keySet()) {
-            if (key.length() > 1) {//从2个字的开始
-
-                Integer count = subStringCountMap.get(key);
-                double pa = (double) count / totalWordCount;
-
-                Map<String, String> children = cutStringIntoArray(key);
-                double max = 0;
-                for (Map.Entry<String, String> entry : children.entrySet()) {
-                    String key1 = entry.getKey();
-                    String value = entry.getValue();
-
-                    double pkey1 = (double) subStringCountMap.get(key1) / totalWordCount;
-                    double pvalue = (double) subStringCountMap.get(value) / totalWordCount;
-
-                    double multi = pkey1 * pvalue;
-                    if (multi >= max) {
-                        max = multi;
-                    }
-                }
-
-                double ningjiedu = pa / max;
-                ningjieMap.put(key, ningjiedu);
-            }
-        }
-
-        /**
-         * 保存内聚度结果
-         */
-        List<Map.Entry<String, Double>> tmpNingjieList = new ArrayList<>(ningjieMap.entrySet());
-        Utils.sortMapStringAndDouble(tmpNingjieList, true);
-        if (wordNingjuFile.exists()) {
-            wordNingjuFile.delete();
-        }
-        try {
-            for (Map.Entry<String, Double> entry : tmpNingjieList) {
-                FileUtils.write(wordNingjuFile, entry.getKey() + " " + entry.getValue() + "\n", true);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (info) {
-//            for (Map.Entry<String, Double> entry : tmpNingjieList) {
-//                logger.info("{} -- {}", entry.getKey(), entry.getValue());
-//            }
-        }
-        /**
-         * 计算信息熵
-         */
-        for (String key : subStringCountMap.keySet()) {
-            if (key.length() > 1) {//从2个字的开始
-
-                //计算左右信息熵
-                Integer prefixCountInteger = subStringPostfixCountMap.get(key);//以该词开头的词语个数
-                Map<String, Integer> childrenPostfixMap = findPrePostfixCount(key, subStringCountMap, true);//以key为开头的词
-                int prefixCount = prefixCountInteger == null ? 0 : prefixCountInteger.intValue();
-                double leftEntropy = computeEntropy(childrenPostfixMap, prefixCount);
-
-
-                Integer postCountInteger = reverseStringPrefixCountMap.get(key);//以该词为结尾的词的个数
-                Map<String, Integer> childrenPrefixMap = findPrePostfixCount(key, subStringCountMap, false);//以key为结尾的词
-                int postCount = postCountInteger == null ? 0 : postCountInteger.intValue();
-                double rightEntropy = computeEntropy(childrenPrefixMap, postCount);
-
-                logger.info("{}, prefix: {}, postfix: {}", new String[]{key, prefixCount + "", postCount + ""});
-                entropyMap.put(key, leftEntropy + rightEntropy);
-            }
-        }
-
-        if (info) {
-            List<Map.Entry<String, Double>> tmpEntropyList = new ArrayList<>(entropyMap.entrySet());
-            Utils.sortMapStringAndDouble(tmpEntropyList, true);
-//            Collections.sort(tmpEntropyList, new Comparator<Map.Entry<String, Double>>() {
-//                @Override
-//                public int compare(Map.Entry<String, Double> o1, Map.Entry<String, Double> o2) {
-//                    Double value = o1.getValue();
-//                    Double value1 = o2.getValue();
-//                    if (value > value1) {
-//                        return 1;
-//                    } else {
-//                        return 0;
-//                    }
-//                }
-//            });
-            for (Map.Entry<String, Double> entry : tmpEntropyList) {
-                logger.info("{} -- {}", entry.getKey(), entry.getValue());
-            }
-        }
-        return potentialWords;
-    }
-
-    private static double computeEntropy(Map<String, Integer> map, int totalCount) {
+    private static double computeEntropyFunction(Map<String, Integer> map, int totalCount) {
         double entropy = 0;
         if (map != null && map.size() > 0 && totalCount != 0) {
             for (Map.Entry<String, Integer> entry : map.entrySet()) {
@@ -488,17 +593,6 @@ public class NewWordDetection {
     }
 
 
-    void findyuguo() {
-        try {
-            filePath = "data/yuguo.txt";
-            init();
-            String s = FileUtils.readFileToString(dataFile);
-            findPotentialWords(s, 3);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     static Map<String, String> cutStringIntoArray(String string) {//拆分一个词语为多个词的组合
         Map<String, String> list = new HashMap<>();
         if (!StringUtils.isEmpty(string) && string.length() >= 2) {
@@ -525,7 +619,9 @@ public class NewWordDetection {
 //            logger.info(entry.getKey() + "          " + entry.getValue());
 //        }
         newWordDetection.filePath = "data/yuguo.txt";
+//        newWordDetection.filePath = "data/hongloumeng.txt";
         newWordDetection.process();
+
     }
 
 }
