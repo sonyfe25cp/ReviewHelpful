@@ -29,7 +29,7 @@ public class NewWordDetection {
 
     String filePath = null;
     File dataFile;
-    int wordLength = 6;
+    int wordLength = 5;
 
 
     File postfixFile;//以该词为开头的词的文件
@@ -619,6 +619,8 @@ public class NewWordDetection {
 //            logger.info(entry.getKey() + "          " + entry.getValue());
 //        }
         newWordDetection.filePath = "data/yuguo.txt";
+//        newWordDetection.filePath = "data/mudanting.txt";
+//        newWordDetection.filePath = "data/taiyang.txt";
 //        newWordDetection.filePath = "data/hongloumeng.txt";
         newWordDetection.process();
 
