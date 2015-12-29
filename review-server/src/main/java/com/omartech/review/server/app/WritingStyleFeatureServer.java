@@ -29,5 +29,9 @@ public class WritingStyleFeatureServer extends ADataService {
         response.setVector(vector);
         response.setLength(1);
         return response;
+
+
+
+
     }
 }
