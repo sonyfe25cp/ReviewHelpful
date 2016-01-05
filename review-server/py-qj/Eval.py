@@ -106,7 +106,7 @@ tfidf = TfidfVectorizer(max_df=0.98, max_features=200000,
                         min_df=0.06, stop_words='english',
                         use_idf=True, tokenizer=tokenize_and_stem, ngram_range=(1, 3))
 
-tfidf_mat = tfidf.fit_transform(synopses)
+tfidf_mat = tfidf.(synopses)
 
 print tfidf_mat.shape
 
@@ -118,6 +118,5 @@ for i in range(2, 20):
 
     #silhouette评分是系统自带的
 
-    print "dunnscore", dunnscore(tfidf_mat, tag), "davies", davies(tfidf_mat,
-                                                                   tag), "silhouette", metrics.silhouette_score(
+    print "dunnscore", dunnscore(tfidf_mat, tag), "davies", davies(tfidf_mat, tag), "silhouette", metrics.silhouette_score(
         tfidf_mat, km.labels_, metric="euclidean")
