@@ -1,0 +1,25 @@
+1) Feature 5000, unigram, max_df = 0.8, min_df = 0.05
+tfidf = TfidfVectorizer(max_df=0.8, max_features=5000,
+                        min_df=0.05, stop_words='english',
+                        tokenizer=tokenize_and_stem, ngram_range=(1, 1))
+K=5, dunnscore is best
+K = 4, davies is best
+
+k =  2 runs :  dunnscore 0.150290659491 davies 13.3075469012 silhouette 0.0113177619535
+k =  3 runs :  dunnscore 0.150363323389 davies 12.8214219094 silhouette 0.00361940982307
+k =  4 runs :  dunnscore 0.151294808034 davies 12.8848501352 silhouette 0.00457259848065
+k =  5 runs :  dunnscore 0.153787571705 davies 12.5714691318 silhouette 0.00319254509351
+k =  6 runs :  dunnscore 0.147254606081 davies 12.0217578297 silhouette 0.00380102899935
+k =  7 runs :  dunnscore 0.141419114148 davies 12.7948703574 silhouette 0.00253873139369
+k =  8 runs :  dunnscore 0.14425229925 davies 12.8642073302 silhouette 0.000972077913197
+k =  9 runs :  dunnscore 0.144969131135 davies 12.7770547421 silhouette 0.000288742560353
+k =  10 runs :  dunnscore 0.142165760381 davies 12.3514608536 silhouette 0.00143771823532
+k =  11 runs :  dunnscore 0.146810187687 davies 12.3664683295 silhouette 0.00115520999606
+k =  12 runs :  dunnscore 0.148267472405 davies 12.1540042876 silhouette -0.000138967168068
+k =  13 runs :  dunnscore 0.148326405732 davies 11.8468998323 silhouette 0.00188149868048
+k =  14 runs :  dunnscore 0.145605587989 davies 11.8285374546 silhouette 0.000611407724017
+k =  15 runs :  dunnscore 0.153613009596 davies 11.608760006 silhouette -0.00194698028824
+k =  16 runs :  dunnscore 0.118789850174 davies 12.0013099585 silhouette 0.000378160472865
+k =  17 runs :  dunnscore 0.146523032108 davies 11.6383299318 silhouette 0.00144242859839
+k =  18 runs :  dunnscore 0.151645919326 davies 11.5223240444 silhouette -0.00168354236518
+k =  19 runs :  dunnscore 0.12151211586 davies 11.8326630589 silhouette 0.00168908179187
