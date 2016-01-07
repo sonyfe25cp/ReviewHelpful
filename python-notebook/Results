@@ -23,3 +23,28 @@ k =  16 runs :  dunnscore 0.118789850174 davies 12.0013099585 silhouette 0.00037
 k =  17 runs :  dunnscore 0.146523032108 davies 11.6383299318 silhouette 0.00144242859839
 k =  18 runs :  dunnscore 0.151645919326 davies 11.5223240444 silhouette -0.00168354236518
 k =  19 runs :  dunnscore 0.12151211586 davies 11.8326630589 silhouette 0.00168908179187
+
+
+2) Feature 1000000, unigram, max_df = 0.8, min_df = 0.05
+tfidf = TfidfVectorizer(max_df=0.8, max_features=100000,
+                        min_df=0.05, stop_words='english',
+                        tokenizer=tokenize_and_stem, ngram_range=(1, 1))
+
+k =  2 runs :  dunnscore 0.150269104018 davies 13.3094558131 silhouette 0.0113226989623
+k =  3 runs :  dunnscore 0.150440343627 davies 12.8157645603 silhouette 0.00355556334582
+k =  4 runs :  dunnscore 0.151317388034 davies 12.8777940328 silhouette 0.00442168157952
+k =  5 runs :  dunnscore 0.153164482567 davies 12.5802514042 silhouette 0.00331685634282
+k =  6 runs :  dunnscore 0.14052396771 davies 13.2824760999 silhouette 0.00138763249451
+k =  7 runs :  dunnscore 0.139111859457 davies 12.7390881064 silhouette 0.00197052437815
+k =  8 runs :  dunnscore 0.144142634807 davies 12.8912314628 silhouette 0.000993964297684
+k =  9 runs :  dunnscore 0.145605318325 davies 12.7880217452 silhouette -0.000100513002689
+k =  10 runs :  dunnscore 0.144250870845 davies 12.6579745306 silhouette 0.000250138136606
+k =  11 runs :  dunnscore 0.14971969802 davies 12.2658048867 silhouette 0.000209014298435
+k =  12 runs :  dunnscore 0.148457820392 davies 11.8464260099 silhouette 0.00134009177922
+k =  13 runs :  dunnscore 0.148045946926 davies 11.9293638404 silhouette -8.1573627997e-05
+k =  14 runs :  dunnscore 0.140688500719 davies 12.0920327667 silhouette -0.00246215224953
+k =  15 runs :  dunnscore 0.153500704414 davies 11.7702896543 silhouette -0.00202636739434
+k =  16 runs :  dunnscore 0.149693887762 davies 11.493850053 silhouette 0.00113028672746
+k =  17 runs :  dunnscore 0.14738173843 davies 11.7123608587 silhouette 0.000348105261458
+k =  18 runs :  dunnscore 0.149086780128 davies 11.4172592222 silhouette 0.0010960951788
+k =  19 runs :  dunnscore 0.138973598885 davies 11.6473686053 silhouette 0.000866011721459
