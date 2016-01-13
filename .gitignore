@@ -16,3 +16,4 @@ gen-java/
 data/
 output/
 *.voc
+.ipynb_checkpoints/
