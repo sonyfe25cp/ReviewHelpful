@@ -1,4 +1,5 @@
 .idea/
+*.gz
 .settings/
 .project
 target/
