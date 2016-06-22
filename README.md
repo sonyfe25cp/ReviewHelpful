@@ -3,42 +3,11 @@
 ##使用说明
 
 ###Git
-0. 先在本机workspace下执行 
-
-    git clone git@github.com:sonyfe25cp/ReviewHelpful.git
-
-等下载完，然后打开IDE，导入现有项目
-
-在POM.XML上右键->add 什么maven项目（一般是最下面的那项）
-
-然后再右键maven-》reimport
-
-等下载完依赖包就行了
-
-1. 不管什么时候要开始写代码，首先执行
-
-    git pull origin master
-
-2. 不管要吃饭、要上课还是要去睡觉，要记得
-
-    * git status
-    * git add .
-    * git commit -m "写备注"
-    * git status
-    * git push origin master
-
-3. 遇到了冲突之类的情况，在IDE中打开冲突的文件，
-认真看
-
-    <<<<<<HEAD 
-
-这种标示符里面的代码，修改完毕之后把这堆符号删掉，再提交就行了
 
 ###代码结构
 
-1. qian同学在review-server项目的src/main/xxx..xxxx/modules这个包里面写代码
-2. 数据文件放在 data/目录下
-3. 输出都放在 output/目录下
+* 数据文件放在 data/目录下
+* 输出都放在 output/目录下
 
 
 ##步骤
