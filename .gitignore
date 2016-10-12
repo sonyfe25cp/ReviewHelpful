@@ -18,3 +18,4 @@ data/
 output/
 *.voc
 .ipynb_checkpoints/
+*.class
